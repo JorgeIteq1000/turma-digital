@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons/Logo";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -19,20 +20,70 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log("--- INICIANDO LOGIN ---");
 
-    // Simulate login - will be replaced with Supabase auth
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // Demo: check for admin or student
-      if (formData.email.includes("admin")) {
-        toast.success("Bem-vindo, Administrador!");
+    try {
+      // 1. Tenta autenticar
+      console.log("1. Tentando signInWithPassword para:", formData.email);
+      const { data, error: authError } = await supabase.auth.signInWithPassword(
+        {
+          email: formData.email,
+          password: formData.password,
+        },
+      );
+
+      if (authError) {
+        console.error("❌ Erro no Auth:", authError);
+        // Tratamento de erro comum: Email não confirmado
+        if (authError.message.includes("Email not confirmed")) {
+          throw new Error("Verifique seu e-mail para confirmar o cadastro.");
+        }
+        throw new Error(authError.message || "E-mail ou senha incorretos.");
+      }
+
+      if (!data.user) {
+        throw new Error("Erro desconhecido: Usuário não retornado.");
+      }
+
+      console.log("✅ Auth Sucesso! User ID:", data.user.id);
+
+      // 2. Busca a role
+      console.log("2. Buscando role na tabela user_roles...");
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      if (roleError) {
+        console.error("❌ Erro ao buscar role:", roleError);
+        // Não vamos travar, vamos deixar entrar como student mas avisar no console
+      } else {
+        console.log("✅ Role encontrada:", roleData);
+      }
+
+      const userRole = roleData?.role || "student";
+      console.log("3. Role definida para navegação:", userRole);
+
+      toast.success(
+        `Bem-vindo, ${userRole === "admin" ? "Administrador" : "Aluno"}!`,
+      );
+
+      // 3. Redireciona
+      if (userRole === "admin") {
+        console.log("🚀 Redirecionando para /admin");
         navigate("/admin");
       } else {
-        toast.success("Login realizado com sucesso!");
+        console.log("🚀 Redirecionando para /dashboard");
         navigate("/dashboard");
       }
-    }, 1500);
+    } catch (error: any) {
+      console.error("🚨 ERRO FINAL:", error);
+      toast.error(error.message || "Falha ao entrar na plataforma.");
+    } finally {
+      setIsLoading(false);
+      console.log("--- FIM DO PROCESSO ---");
+    }
   };
 
   return (
@@ -133,15 +184,6 @@ export default function Login() {
                 </button>
               </p>
             </div>
-          </div>
-
-          {/* Demo info */}
-          <div className="mt-4 rounded-lg border border-border bg-muted/50 p-4 text-center">
-            <p className="text-xs text-muted-foreground">
-              <strong>Demo:</strong> Use qualquer email com "admin" para acessar
-              como administrador, ou qualquer outro email para acessar como
-              aluno.
-            </p>
           </div>
         </div>
       </div>

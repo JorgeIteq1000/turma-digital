@@ -2,18 +2,19 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { RequireAuth } from "@/components/auth/RequireAuth"; // <--- Importe o Guard
 
 // Pages
-import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
-import StudentDashboard from "./pages/student/Dashboard";
+import Index from "./pages/Index"; // Landing Page
+import Dashboard from "./pages/student/Dashboard";
 import LessonView from "./pages/student/LessonView";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import StudentsPage from "./pages/admin/StudentsPage";
 import CoursesPage from "./pages/admin/CoursesPage";
 import ClassGroupsPage from "./pages/admin/ClassGroupsPage";
 import LessonsPage from "./pages/admin/LessonsPage";
-import StudentsPage from "./pages/admin/StudentsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,29 +26,71 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
+          {/* Rotas Públicas */}
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
 
-          {/* Student Routes */}
-          <Route path="/dashboard" element={<StudentDashboard />} />
-          <Route path="/lesson/:lessonId" element={<LessonView />} />
-          <Route path="/upcoming" element={<StudentDashboard />} />
-          <Route path="/recorded" element={<StudentDashboard />} />
-          <Route path="/materials" element={<StudentDashboard />} />
-          <Route path="/profile" element={<StudentDashboard />} />
-          <Route path="/class/:classId" element={<StudentDashboard />} />
+          {/* Rotas de Aluno (Protegidas) */}
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAuth>
+                <Dashboard />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/lessons/:id"
+            element={
+              <RequireAuth>
+                <LessonView />
+              </RequireAuth>
+            }
+          />
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/courses" element={<CoursesPage />} />
-          <Route path="/admin/classes" element={<ClassGroupsPage />} />
-          <Route path="/admin/lessons" element={<LessonsPage />} />
-          <Route path="/admin/students" element={<StudentsPage />} />
-          <Route path="/admin/reports" element={<AdminDashboard />} />
-          <Route path="/admin/settings" element={<AdminDashboard />} />
+          {/* Rotas de Admin (Protegidas + Apenas Admin) */}
+          <Route
+            path="/admin"
+            element={
+              <RequireAuth requiredRole="admin">
+                <AdminDashboard />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/students"
+            element={
+              <RequireAuth requiredRole="admin">
+                <StudentsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/courses"
+            element={
+              <RequireAuth requiredRole="admin">
+                <CoursesPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/classes"
+            element={
+              <RequireAuth requiredRole="admin">
+                <ClassGroupsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/lessons"
+            element={
+              <RequireAuth requiredRole="admin">
+                <LessonsPage />
+              </RequireAuth>
+            }
+          />
 
-          {/* Catch-all */}
+          {/* Fallback */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
