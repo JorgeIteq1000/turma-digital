@@ -10,6 +10,10 @@ import Login from "./pages/auth/Login";
 import StudentDashboard from "./pages/student/Dashboard";
 import LessonView from "./pages/student/LessonView";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import CoursesPage from "./pages/admin/CoursesPage";
+import ClassGroupsPage from "./pages/admin/ClassGroupsPage";
+import LessonsPage from "./pages/admin/LessonsPage";
+import StudentsPage from "./pages/admin/StudentsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,10 +40,10 @@ const App = () => (
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/courses" element={<AdminDashboard />} />
-          <Route path="/admin/classes" element={<AdminDashboard />} />
-          <Route path="/admin/lessons" element={<AdminDashboard />} />
-          <Route path="/admin/students" element={<AdminDashboard />} />
+          <Route path="/admin/courses" element={<CoursesPage />} />
+          <Route path="/admin/classes" element={<ClassGroupsPage />} />
+          <Route path="/admin/lessons" element={<LessonsPage />} />
+          <Route path="/admin/students" element={<StudentsPage />} />
           <Route path="/admin/reports" element={<AdminDashboard />} />
           <Route path="/admin/settings" element={<AdminDashboard />} />
 
