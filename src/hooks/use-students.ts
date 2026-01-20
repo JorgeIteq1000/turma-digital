@@ -34,9 +34,8 @@ export function useStudents() {
       if (rolesError) throw rolesError;
 
       // Get all enrollments with class group info
-      const { data: enrollments, error: enrollmentsError } = await supabase
-        .from("class_enrollments")
-        .select(`
+      const { data: enrollments, error: enrollmentsError } =
+        await supabase.from("class_enrollments").select(`
           *,
           class_groups (*)
         `);
@@ -45,9 +44,7 @@ export function useStudents() {
 
       // Filter only students and combine data
       const studentIds = new Set(
-        roles
-          .filter((r) => r.role === "student")
-          .map((r) => r.user_id)
+        roles.filter((r) => r.role === "student").map((r) => r.user_id),
       );
 
       const students = profiles
@@ -55,7 +52,9 @@ export function useStudents() {
         .map((profile) => ({
           ...profile,
           user_roles: roles.filter((r) => r.user_id === profile.id),
-          class_enrollments: enrollments.filter((e) => e.user_id === profile.id),
+          class_enrollments: enrollments.filter(
+            (e) => e.user_id === profile.id,
+          ),
         }));
 
       return students as StudentWithEnrollments[];
@@ -79,10 +78,12 @@ export function useStudent(id: string | undefined) {
 
       const { data: enrollments, error: enrollmentsError } = await supabase
         .from("class_enrollments")
-        .select(`
+        .select(
+          `
           *,
           class_groups (*)
-        `)
+        `,
+        )
         .eq("user_id", id);
 
       if (enrollmentsError) throw enrollmentsError;
@@ -160,6 +161,49 @@ export function useUnenrollStudent() {
   });
 }
 
+export function useCreateStudent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      email,
+      password,
+      full_name,
+    }: {
+      email: string;
+      password: string;
+      full_name: string;
+    }) => {
+      // Nota: Em produção, o ideal é usar uma Edge Function para criar usuários sem deslogar o admin.
+      // Aqui usamos o signUp padrão.
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: full_name,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      // Se o usuário foi criado, mas a sessão mudou, o Admin pode ser deslogado.
+      // Isso é um comportamento padrão do Supabase Client.
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast.success(
+        "Aluno cadastrado! (Verifique se precisa confirmar o email)",
+      );
+    },
+    onError: (error) => {
+      toast.error("Erro ao cadastrar aluno: " + error.message);
+    },
+  });
+}
+
 export function useUpdateStudentEnrollments() {
   const queryClient = useQueryClient();
 
@@ -179,7 +223,9 @@ export function useUpdateStudentEnrollments() {
 
       if (fetchError) throw fetchError;
 
-      const currentIds = new Set(currentEnrollments.map((e) => e.class_group_id));
+      const currentIds = new Set(
+        currentEnrollments.map((e) => e.class_group_id),
+      );
       const newIds = new Set(classGroupIds);
 
       // Find enrollments to add
@@ -194,7 +240,12 @@ export function useUpdateStudentEnrollments() {
       if (toAdd.length > 0) {
         const { error: insertError } = await supabase
           .from("class_enrollments")
-          .insert(toAdd.map((classGroupId) => ({ user_id: userId, class_group_id: classGroupId })));
+          .insert(
+            toAdd.map((classGroupId) => ({
+              user_id: userId,
+              class_group_id: classGroupId,
+            })),
+          );
 
         if (insertError) throw insertError;
       }

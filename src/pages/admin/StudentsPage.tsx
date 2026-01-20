@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStudents } from "@/hooks/use-students";
 import { StudentEnrollmentDialog } from "@/components/admin/StudentEnrollmentDialog";
+import { StudentFormDialog } from "@/components/admin/StudentFormDialog"; // <--- Importe o novo Dialog
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -25,7 +26,10 @@ export default function StudentsPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [enrollmentDialogOpen, setEnrollmentDialogOpen] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false); // <--- Novo Estado
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
+    null,
+  );
 
   const handleLogout = () => {
     navigate("/");
@@ -34,7 +38,7 @@ export default function StudentsPage() {
   const filteredStudents = students?.filter(
     (student) =>
       student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchQuery.toLowerCase())
+      student.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleManageEnrollments = (studentId: string) => {
@@ -65,7 +69,8 @@ export default function StudentsPage() {
               Gerencie os alunos e suas matrículas nas turmas.
             </p>
           </div>
-          <Button onClick={() => navigate("/admin/students/new")}>
+          {/* Botão Atualizado */}
+          <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Aluno
           </Button>
@@ -127,7 +132,9 @@ export default function StudentsPage() {
               ) : (
                 filteredStudents?.map((student) => (
                   <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.full_name}</TableCell>
+                    <TableCell className="font-medium">
+                      {student.full_name}
+                    </TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground">
                       {student.email}
                     </TableCell>
@@ -162,11 +169,17 @@ export default function StudentsPage() {
         </div>
       </div>
 
-      {/* Enrollment Dialog */}
+      {/* Enrollment Dialog (Matrículas) */}
       <StudentEnrollmentDialog
         open={enrollmentDialogOpen}
         onOpenChange={handleDialogClose}
         studentId={selectedStudentId}
+      />
+
+      {/* Novo Form Dialog (Criação) */}
+      <StudentFormDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
       />
     </DashboardLayout>
   );
