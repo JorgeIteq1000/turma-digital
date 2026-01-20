@@ -3,7 +3,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Pages
 import Index from "./pages/Index";
+import Login from "./pages/auth/Login";
+import StudentDashboard from "./pages/student/Dashboard";
+import LessonView from "./pages/student/LessonView";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -15,8 +21,29 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Student Routes */}
+          <Route path="/dashboard" element={<StudentDashboard />} />
+          <Route path="/lesson/:lessonId" element={<LessonView />} />
+          <Route path="/upcoming" element={<StudentDashboard />} />
+          <Route path="/recorded" element={<StudentDashboard />} />
+          <Route path="/materials" element={<StudentDashboard />} />
+          <Route path="/profile" element={<StudentDashboard />} />
+          <Route path="/class/:classId" element={<StudentDashboard />} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/courses" element={<AdminDashboard />} />
+          <Route path="/admin/classes" element={<AdminDashboard />} />
+          <Route path="/admin/lessons" element={<AdminDashboard />} />
+          <Route path="/admin/students" element={<AdminDashboard />} />
+          <Route path="/admin/reports" element={<AdminDashboard />} />
+          <Route path="/admin/settings" element={<AdminDashboard />} />
+
+          {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
