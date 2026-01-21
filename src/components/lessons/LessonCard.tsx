@@ -44,7 +44,7 @@ export function LessonCard({
         isAvailable && !isLive && "border-success/50",
         !isAvailable && "border-warning/50",
         "hover:shadow-card-hover",
-        className
+        className,
       )}
     >
       {/* Status indicator */}
@@ -53,7 +53,7 @@ export function LessonCard({
           "absolute left-0 top-0 h-full w-1",
           isLive && "bg-destructive",
           isAvailable && !isLive && "bg-success",
-          !isAvailable && "bg-warning"
+          !isAvailable && "bg-warning",
         )}
       />
 
