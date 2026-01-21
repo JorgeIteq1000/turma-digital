@@ -1,6 +1,6 @@
 // Database types for EduConnect Platform
 
-export type UserRole = 'admin' | 'student';
+export type UserRole = "admin" | "student";
 
 export interface Profile {
   id: string;
@@ -9,6 +9,8 @@ export interface Profile {
   avatar_url?: string;
   created_at: string;
   updated_at: string;
+  is_demo?: boolean;
+  demo_hours?: number;
 }
 
 export interface Course {

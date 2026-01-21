@@ -161,6 +161,7 @@ export function useUnenrollStudent() {
   });
 }
 
+// --- AQUI ESTÁ A CORREÇÃO PRINCIPAL ---
 export function useCreateStudent() {
   const queryClient = useQueryClient();
 
@@ -169,27 +170,46 @@ export function useCreateStudent() {
       email,
       password,
       full_name,
+      metadata, // Aceita os novos dados
     }: {
       email: string;
       password: string;
       full_name: string;
+      metadata?: { is_demo: boolean; demo_hours?: number };
     }) => {
-      // Nota: Em produção, o ideal é usar uma Edge Function para criar usuários sem deslogar o admin.
-      // Aqui usamos o signUp padrão.
+      // 1. Criação do Usuário
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: full_name,
+            ...metadata, // Passa metadados para garantir
           },
         },
       });
 
       if (error) throw error;
 
-      // Se o usuário foi criado, mas a sessão mudou, o Admin pode ser deslogado.
-      // Isso é um comportamento padrão do Supabase Client.
+      // 2. Atualização Explícita do Perfil
+      // Isso garante que os campos is_demo e demo_hours sejam salvos na tabela public.profiles
+      // mesmo que o Trigger padrão do Supabase não os copie.
+      if (data.user && metadata?.is_demo) {
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({
+            is_demo: metadata.is_demo,
+            demo_hours: metadata.demo_hours ?? 24,
+          })
+          .eq("id", data.user.id);
+
+        if (updateError) {
+          console.error("Erro ao configurar modo demonstração:", updateError);
+          // Não lançamos erro aqui para não invalidar o cadastro se só isso falhar,
+          // mas logamos para debug.
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
