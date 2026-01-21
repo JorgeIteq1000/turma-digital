@@ -1,4 +1,4 @@
-import { Lock, Play, Loader2 } from "lucide-react";
+import { Lock, Play, Loader2, RefreshCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   useState,
@@ -7,6 +7,7 @@ import {
   useImperativeHandle,
   useEffect,
 } from "react";
+import ReactPlayer from "react-player";
 
 interface VideoPlayerProps {
   youtubeUrl: string;
@@ -22,16 +23,33 @@ export interface VideoPlayerRef {
 
 export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
   ({ youtubeUrl, isLocked = false, className, onPlay }, ref) => {
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [iframeUrl, setIframeUrl] = useState<string | null>(null);
+    // ESTADOS
+    const [shouldPlay, setShouldPlay] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false); // Só vira true quando o vídeo REALMENTE começa
+    const [hasError, setHasError] = useState(false);
 
-    // Manteiga a ref para não quebrar a página pai, mas com funcionalidades limitadas temporariamente
+    // REF E CAST (Bypass para TypeScript não reclamar)
+    const playerRef = useRef<any>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Player = ReactPlayer as any;
+
+    // EXPOSIÇÃO DE MÉTODOS (Isso faz o tempo funcionar!)
     useImperativeHandle(ref, () => ({
-      getCurrentTime: () => 0, // Fallback enquanto usamos iframe nativo
-      seekTo: () => console.log("Seek desabilitado no modo nativo"),
+      getCurrentTime: () => playerRef.current?.getCurrentTime() || 0,
+      seekTo: (seconds: number) => {
+        playerRef.current?.seekTo(seconds, "seconds");
+        setShouldPlay(true); // Força play ao pular
+      },
     }));
 
-    // Extração robusta do ID
+    // Reset ao trocar URL
+    useEffect(() => {
+      setShouldPlay(false);
+      setIsPlaying(false);
+      setHasError(false);
+    }, [youtubeUrl]);
+
+    // Extração de ID e Thumbnail
     const getYoutubeId = (url: string) => {
       if (!url) return null;
       const regExp =
@@ -45,20 +63,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
       ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
       : null;
 
-    // Reset ao trocar URL
-    useEffect(() => {
-      setIsPlaying(false);
-      setIframeUrl(null);
-    }, [youtubeUrl]);
-
-    const handlePlay = () => {
-      if (!videoId) return;
-
-      // Montamos a URL nativa de embed do YouTube com Autoplay
-      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
-
-      setIframeUrl(embedUrl);
-      setIsPlaying(true);
+    const handlePlayClick = () => {
+      setShouldPlay(true);
       if (onPlay) onPlay();
     };
 
@@ -87,37 +93,95 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
       );
     }
 
+    if (hasError) {
+      return (
+        <div className="relative aspect-video w-full flex flex-col items-center justify-center bg-slate-900 rounded-xl text-muted-foreground gap-2">
+          <RefreshCcw className="h-10 w-10 text-red-500" />
+          <p>Erro ao carregar player.</p>
+          <button
+            onClick={() => {
+              setHasError(false);
+              setShouldPlay(true);
+            }}
+            className="text-xs underline hover:text-white"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div
         className={cn(
-          "relative aspect-video w-full overflow-hidden bg-black rounded-xl shadow-lg",
+          "relative aspect-video w-full overflow-hidden rounded-xl bg-slate-950 shadow-lg group isolate",
           className,
         )}
       >
-        {/* MODO NATIVO: Se estiver tocando, mostra o IFRAME direto */}
-        {isPlaying && iframeUrl ? (
-          <iframe
-            src={iframeUrl}
-            className="absolute inset-0 w-full h-full"
-            title="YouTube video player"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
+        {/* PLAYER WRAPPER (Camada 0) */}
+        {/* A classe [&>div]:!h-full força o ReactPlayer a ocupar 100% */}
+        <div className="absolute inset-0 z-0 [&>div]:!h-full [&>div]:!w-full [&>iframe]:!h-full [&>iframe]:!w-full">
+          <Player
+            ref={playerRef}
+            url={youtubeUrl}
+            width="100%"
+            height="100%"
+            playing={shouldPlay}
+            controls={true}
+            style={{ position: "absolute", top: 0, left: 0 }}
+            // Eventos Críticos
+            onReady={() => console.log("✅ Player Pronto")}
+            onStart={() => {
+              console.log("🎬 Vídeo Começou");
+              setIsPlaying(true); // AQUI a mágica acontece: remove a capa
+            }}
+            onPlay={() => setIsPlaying(true)}
+            onError={(e: any) => {
+              console.error("❌ Erro Player:", e);
+              setHasError(true);
+            }}
+            config={{
+              youtube: {
+                playerVars: {
+                  showinfo: 0,
+                  rel: 0,
+                  modestbranding: 1,
+                  origin:
+                    typeof window !== "undefined"
+                      ? window.location.origin
+                      : undefined,
+                } as any,
+              } as any,
+            }}
           />
-        ) : (
-          // MODO CAPA: Imagem estática com botão de play
+        </div>
+
+        {/* CAPA MANUAL / LOADING (Camada 1) */}
+        {!isPlaying && (
           <div
-            className="absolute inset-0 z-20 flex cursor-pointer items-center justify-center bg-cover bg-center"
+            className="absolute inset-0 z-20 flex cursor-pointer items-center justify-center bg-cover bg-center transition-opacity duration-500"
             style={{
               backgroundImage: thumbnailUrl
                 ? `url(${thumbnailUrl})`
                 : undefined,
-              backgroundColor: "#1e293b",
+              backgroundColor: "#0f172a",
             }}
-            onClick={handlePlay}
+            onClick={!shouldPlay ? handlePlayClick : undefined}
           >
-            <div className="absolute inset-0 bg-black/40 transition-colors hover:bg-black/20" />
-            <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary shadow-xl transition-transform hover:scale-110">
-              <Play className="ml-2 h-10 w-10 fill-white text-white" />
+            <div className="absolute inset-0 bg-black/40 transition-colors group-hover:bg-black/20" />
+
+            <div className="relative z-30 flex flex-col items-center gap-3">
+              {shouldPlay ? (
+                // Estado de Carregamento (Clicou mas não começou ainda)
+                <>
+                  <Loader2 className="h-12 w-12 animate-spin text-white" />
+                </>
+              ) : (
+                // Estado Inicial (Botão Play)
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary shadow-xl transition-transform hover:scale-110">
+                  <Play className="ml-2 h-10 w-10 fill-white text-white" />
+                </div>
+              )}
             </div>
           </div>
         )}
