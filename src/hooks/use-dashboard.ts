@@ -66,7 +66,7 @@ export function useAdminStats() {
   });
 }
 
-// --- Hook para o Aluno (ATUALIZADO) ---
+// --- Hook para o Aluno (CORRIGIDO) ---
 export function useStudentDashboard() {
   return useQuery({
     queryKey: ["student-dashboard"],
@@ -76,7 +76,7 @@ export function useStudentDashboard() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("User not found");
 
-      // 1. Minhas Turmas (COM CONTAGEM DE AULAS)
+      // 1. Minhas Turmas (COM IMAGEM E CONTAGEM)
       const { data: enrollments } = await supabase
         .from("class_enrollments")
         .select(
@@ -85,7 +85,7 @@ export function useStudentDashboard() {
             id,
             name,
             description,
-            courses ( name ),
+            courses ( name, thumbnail_url ),
             lessons ( count ) 
           )
         `,
@@ -94,12 +94,21 @@ export function useStudentDashboard() {
         .eq("is_active", true);
 
       // Nota: O Supabase retorna lessons: [{ count: 5 }]
+      // Precisamos fazer o cast ou verificação de tipo segura aqui se o TS reclamar,
+      // mas geralmente a inferência funciona se a string estiver limpa.
       const myClasses =
-        enrollments?.map((e) => ({
-          ...e.class_groups,
-          // Tratamento para pegar o número exato
-          lessonsCount: e.class_groups?.lessons?.[0]?.count || 0,
-        })) || [];
+        enrollments?.map((e) => {
+          // Acesso seguro para evitar erro de tipo se lessons for undefined
+          const lessonData = e.class_groups?.lessons as unknown as
+            | { count: number }[]
+            | undefined;
+          const count = lessonData?.[0]?.count || 0;
+
+          return {
+            ...e.class_groups,
+            lessonsCount: count,
+          };
+        }) || [];
 
       const classIds = enrollments?.map((e) => e.class_groups?.id) || [];
 
@@ -108,7 +117,7 @@ export function useStudentDashboard() {
       if (classIds.length > 0) {
         const { data } = await supabase
           .from("lessons")
-          .select("*, material_url, material_name") // Trazendo material
+          .select("*, material_url, material_name")
           .in("class_group_id", classIds)
           .gte("scheduled_at", new Date().toISOString())
           .order("scheduled_at", { ascending: true })
@@ -121,7 +130,7 @@ export function useStudentDashboard() {
       if (classIds.length > 0) {
         const { data } = await supabase
           .from("lessons")
-          .select("*, material_url, material_name") // Trazendo material
+          .select("*, material_url, material_name")
           .in("class_group_id", classIds)
           .lt("scheduled_at", new Date().toISOString())
           .order("scheduled_at", { ascending: false })

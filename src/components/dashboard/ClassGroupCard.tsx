@@ -1,8 +1,9 @@
-import { BookOpen, Calendar, Users, ChevronRight } from "lucide-react";
+import { BookOpen, Calendar, ChevronRight, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface ClassGroupCardProps {
   id: string;
@@ -10,99 +11,99 @@ interface ClassGroupCardProps {
   courseName: string;
   description?: string;
   lessonsCount: number;
-  upcomingCount: number;
-  recordedCount: number;
+  imageUrl?: string | null; // <--- Nova Prop
   nextLessonDate?: Date;
-  thumbnailUrl?: string;
+  progress?: number;
   onClick?: () => void;
   className?: string;
 }
 
 export function ClassGroupCard({
-  id,
   name,
   courseName,
   description,
   lessonsCount,
-  upcomingCount,
-  recordedCount,
+  imageUrl,
   nextLessonDate,
-  thumbnailUrl,
+  progress = 0,
   onClick,
   className,
 }: ClassGroupCardProps) {
   return (
     <div
       className={cn(
-        "card-elevated group cursor-pointer overflow-hidden",
-        className
+        "group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/50 hover:shadow-md",
+        className,
       )}
-      onClick={onClick}
     >
-      {/* Header with thumbnail */}
-      <div className="relative h-32 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
-        {thumbnailUrl ? (
+      {/* Imagem de Capa */}
+      <div className="relative h-32 w-full overflow-hidden bg-muted">
+        {imageUrl ? (
           <img
-            src={thumbnailUrl}
-            alt={name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            src={imageUrl}
+            alt={courseName}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center">
-            <BookOpen className="h-12 w-12 text-primary/30" />
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+            <GraduationCap className="h-12 w-12 text-primary/40" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
-        <div className="absolute bottom-3 left-4 right-4">
-          <span className="inline-block rounded-full bg-primary/90 px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
-            {courseName}
-          </span>
+
+        {/* Badge do Curso */}
+        <div className="absolute left-4 top-4 rounded-full bg-background/90 px-2.5 py-0.5 text-xs font-medium text-foreground backdrop-blur-sm">
+          {courseName}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <h3 className="font-display text-lg font-semibold text-foreground line-clamp-1">
+      {/* Conteúdo */}
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="font-display text-lg font-semibold leading-tight group-hover:text-primary">
           {name}
         </h3>
 
         {description && (
-          <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+          <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
             {description}
           </p>
         )}
 
-        {/* Stats */}
-        <div className="mt-4 flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <BookOpen className="h-4 w-4" />
-            <span>{lessonsCount} aulas</span>
+        <div className="mt-auto space-y-4 pt-4">
+          {/* Info Stats */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <BookOpen className="h-3.5 w-3.5" />
+              <span>{lessonsCount} aulas</span>
+            </div>
+            {nextLessonDate && (
+              <div className="flex items-center gap-1.5 text-warning">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>
+                  Próxima: {format(nextLessonDate, "dd/MM", { locale: ptBR })}
+                </span>
+              </div>
+            )}
           </div>
-          {upcomingCount > 0 && (
-            <div className="flex items-center gap-1.5 text-warning">
-              <Calendar className="h-4 w-4" />
-              <span>{upcomingCount} próximas</span>
-            </div>
-          )}
-          {recordedCount > 0 && (
-            <div className="flex items-center gap-1.5 text-success">
-              <span>{recordedCount} gravadas</span>
-            </div>
-          )}
-        </div>
 
-        {/* Next lesson */}
-        {nextLessonDate && (
-          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-            <span className="text-xs text-muted-foreground">
-              Próxima aula:{" "}
-              <span className="font-medium text-foreground">
-                {format(nextLessonDate, "dd/MM 'às' HH:mm", { locale: ptBR })}
-              </span>
-            </span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+          {/* Barra de Progresso (Visual por enquanto) */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Progresso</span>
+              <span className="font-medium text-foreground">{progress}%</span>
+            </div>
+            <Progress value={progress} className="h-1.5" />
           </div>
-        )}
+
+          <Button
+            className="w-full gap-2"
+            size="sm"
+            variant="secondary"
+            onClick={onClick}
+          >
+            Acessar Turma
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
