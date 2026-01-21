@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useIsDemo } from "@/hooks/use-user-role"; // <--- Importado
+import { useToast } from "@/hooks/use-toast"; // <--- Importado
 
 interface LessonCardProps {
   id: string;
@@ -13,7 +15,7 @@ interface LessonCardProps {
   isLive?: boolean;
   hasMaterial?: boolean;
   materialName?: string;
-  materialUrl?: string; // <--- Agora aceita a URL do material
+  materialUrl?: string;
   thumbnailUrl?: string;
   onWatch?: () => void;
   className?: string;
@@ -36,6 +38,9 @@ export function LessonCard({
   const formattedDate = format(scheduledAt, "dd 'de' MMMM", { locale: ptBR });
   const formattedTime = format(scheduledAt, "HH:mm");
 
+  const { data: isDemo } = useIsDemo(); // Verifica se é demo
+  const { toast } = useToast();
+
   // Função para garantir links seguros (https)
   const getSafeUrl = (url: string | null | undefined) => {
     if (!url) return "#";
@@ -43,6 +48,19 @@ export function LessonCard({
       return `https://${url}`;
     }
     return url;
+  };
+
+  // Trava de Download
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    if (isDemo) {
+      e.preventDefault();
+      console.log("🚫 Download bloqueado no card: Usuário Demo");
+      toast({
+        variant: "destructive",
+        title: "Acesso Restrito",
+        description: "Download somente para Alunos Matriculados.",
+      });
+    }
   };
 
   return (
@@ -67,13 +85,13 @@ export function LessonCard({
       />
 
       <div className="flex flex-col gap-4 p-4 pl-5 sm:flex-row sm:items-start sm:gap-5">
-        {/* ÁREA DA THUMBNAIL (Agora clicável!) */}
+        {/* ÁREA DA THUMBNAIL */}
         <div
           className={cn(
             "relative aspect-video w-full overflow-hidden rounded-lg bg-muted sm:w-40 sm:flex-shrink-0",
-            isAvailable && "cursor-pointer hover:opacity-90 transition-opacity", // Mostra a mãozinha
+            isAvailable && "cursor-pointer hover:opacity-90 transition-opacity",
           )}
-          onClick={isAvailable ? onWatch : undefined} // <--- CLIQUE NA IMAGEM
+          onClick={isAvailable ? onWatch : undefined}
         >
           {thumbnailUrl ? (
             <img
@@ -91,7 +109,6 @@ export function LessonCard({
             </div>
           )}
 
-          {/* Badge Ao Vivo */}
           {isLive && (
             <div className="badge-live absolute left-2 top-2">
               <span className="h-2 w-2 animate-pulse rounded-full bg-destructive" />
@@ -103,7 +120,6 @@ export function LessonCard({
         {/* Conteúdo */}
         <div className="flex flex-1 flex-col gap-3">
           <div>
-            {/* Status badge */}
             <div className="mb-2">
               {isLive ? (
                 <span className="badge-live">
@@ -134,7 +150,6 @@ export function LessonCard({
             )}
           </div>
 
-          {/* Meta info */}
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <Calendar className="h-4 w-4" />
@@ -152,7 +167,6 @@ export function LessonCard({
             )}
           </div>
 
-          {/* Ações */}
           <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
             {isAvailable ? (
               <Button onClick={onWatch} size="sm" className="gap-2">
@@ -166,17 +180,30 @@ export function LessonCard({
               </Button>
             )}
 
-            {/* Botão de Material Corrigido */}
+            {/* Botão de Material com Trava Demo */}
             {hasMaterial && isAvailable && materialUrl && (
-              <Button asChild size="sm" variant="outline" className="gap-2">
-                <a
-                  href={getSafeUrl(materialUrl)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Download className="h-4 w-4" />
-                  {materialName || "Material"}
-                </a>
+              <Button
+                asChild={!isDemo}
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                onClick={isDemo ? handleDownloadClick : undefined}
+              >
+                {isDemo ? (
+                  <span className="cursor-pointer">
+                    <Download className="h-4 w-4" />
+                    {materialName || "Material"}
+                  </span>
+                ) : (
+                  <a
+                    href={getSafeUrl(materialUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download className="h-4 w-4" />
+                    {materialName || "Material"}
+                  </a>
+                )}
               </Button>
             )}
           </div>

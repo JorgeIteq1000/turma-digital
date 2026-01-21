@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, UserPlus, Clock } from "lucide-react";
+import { Loader2, Clock } from "lucide-react"; // Removi UserPlus pois o botão está fora
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +9,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  // DialogTrigger removido, pois o controle é externo
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -25,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useCreateStudent } from "@/hooks/use-students";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   full_name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -34,8 +34,16 @@ const formSchema = z.object({
   demo_hours: z.coerce.number().min(1, "Mínimo de 1 hora").optional(),
 });
 
-export function StudentFormDialog() {
-  const [open, setOpen] = useState(false);
+// Interface para definir as props que o componente aceita
+interface StudentFormDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function StudentFormDialog({
+  open,
+  onOpenChange,
+}: StudentFormDialogProps) {
   const { mutate: createStudent, isPending } = useCreateStudent();
   const { toast } = useToast();
 
@@ -46,11 +54,23 @@ export function StudentFormDialog() {
       email: "",
       password: "mudar_senha_123",
       is_demo: false,
-      demo_hours: 48, // Sugestão padrão de 48h
+      demo_hours: 48,
     },
   });
 
-  // Observa o valor do switch para mostrar/esconder o campo de horas
+  // Reseta o formulário sempre que o modal for fechado ou aberto
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        full_name: "",
+        email: "",
+        password: "mudar_senha_123",
+        is_demo: false,
+        demo_hours: 48,
+      });
+    }
+  }, [open, form]);
+
   const isDemo = form.watch("is_demo");
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -59,8 +79,6 @@ export function StudentFormDialog() {
         email: values.email,
         password: values.password,
         full_name: values.full_name,
-        // Passamos os metadados extras para a função de criação
-        // OBS: Certifique-se que seu useCreateStudent repassa isso para o profile
         metadata: {
           is_demo: values.is_demo,
           demo_hours: values.is_demo ? values.demo_hours : null,
@@ -74,8 +92,7 @@ export function StudentFormDialog() {
               ? `Acesso demonstração liberado por ${values.demo_hours} horas.`
               : "As credenciais foram enviadas.",
           });
-          setOpen(false);
-          form.reset();
+          onOpenChange(false); // Fecha o modal usando a prop
         },
         onError: (error) => {
           toast({
@@ -89,13 +106,7 @@ export function StudentFormDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Novo Aluno
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Adicionar Novo Aluno</DialogTitle>

@@ -2,16 +2,22 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { VideoPlayer, VideoPlayerRef } from "@/components/lessons/VideoPlayer"; // <--- Import atualizado
-import { LessonNotes } from "@/components/lessons/LessonNotes"; // <--- Import novo
+import { VideoPlayer, VideoPlayerRef } from "@/components/lessons/VideoPlayer";
+import { LessonNotes } from "@/components/lessons/LessonNotes";
 import { Logo } from "@/components/icons/Logo";
 import { useLesson } from "@/hooks/use-lessons";
+import { useIsDemo } from "@/hooks/use-user-role"; // <--- Importado
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast"; // <--- Importado
 
 export default function LessonView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast(); // <--- Hook de toast
   const [hasStartedWatching, setHasStartedWatching] = useState(false);
+
+  // Verificação de Demo
+  const { data: isDemo } = useIsDemo();
 
   // Referência para controlar o player de fora
   const playerRef = useRef<VideoPlayerRef>(null);
@@ -39,6 +45,19 @@ export default function LessonView() {
     };
     recordView();
   }, [hasStartedWatching, lesson?.id, id]);
+
+  // Função para bloquear download
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    if (isDemo) {
+      e.preventDefault(); // Impede o link de abrir
+      console.log("🚫 Download bloqueado: Usuário Demo");
+      toast({
+        variant: "destructive",
+        title: "Acesso Restrito",
+        description: "Download somente para Alunos Matriculados.",
+      });
+    }
+  };
 
   if (isLoading)
     return (
@@ -95,7 +114,7 @@ export default function LessonView() {
                 </div>
               )}
 
-              {/* Material de Apoio (Mantido) */}
+              {/* Material de Apoio (Com Trava Demo) */}
               {lesson.material_url && (
                 <div className="rounded-xl border bg-card p-4 flex items-center justify-between">
                   <div>
@@ -104,14 +123,24 @@ export default function LessonView() {
                       {lesson.material_name || "Download disponível"}
                     </p>
                   </div>
-                  <Button variant="outline" asChild>
-                    <a
-                      href={lesson.material_url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Baixar
-                    </a>
+                  <Button
+                    variant="outline"
+                    asChild={!isDemo} // Se for demo, não renderiza como 'a' (link), mas sim como botão normal para pegar o onClick
+                    onClick={isDemo ? handleDownloadClick : undefined}
+                  >
+                    {isDemo ? (
+                      // Renderização para Demo (Botão falso)
+                      <span className="cursor-pointer">Baixar</span>
+                    ) : (
+                      // Renderização Normal (Link)
+                      <a
+                        href={lesson.material_url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Baixar
+                      </a>
+                    )}
                   </Button>
                 </div>
               )}

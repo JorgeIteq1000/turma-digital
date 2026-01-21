@@ -3,7 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
-export type Profile = Tables<"profiles">;
+export type Profile = Tables<"profiles"> & {
+  // Garantindo que o TS reconheça os campos opcionais se não estiverem na definição base
+  is_demo?: boolean | null;
+  demo_hours?: number | null;
+};
 export type UserRole = Tables<"user_roles">;
 export type ClassEnrollment = Tables<"class_enrollments"> & {
   class_groups?: Tables<"class_groups"> | null;
@@ -18,7 +22,7 @@ export function useStudents() {
   return useQuery({
     queryKey: ["students"],
     queryFn: async () => {
-      // First get all profiles with student role
+      // Pega todos os perfis (já inclui is_demo e demo_hours pelo select *)
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
@@ -26,14 +30,12 @@ export function useStudents() {
 
       if (profilesError) throw profilesError;
 
-      // Get all user roles
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("*");
 
       if (rolesError) throw rolesError;
 
-      // Get all enrollments with class group info
       const { data: enrollments, error: enrollmentsError } =
         await supabase.from("class_enrollments").select(`
           *,
@@ -42,11 +44,11 @@ export function useStudents() {
 
       if (enrollmentsError) throw enrollmentsError;
 
-      // Filter only students and combine data
       const studentIds = new Set(
         roles.filter((r) => r.role === "student").map((r) => r.user_id),
       );
 
+      // Combina os dados
       const students = profiles
         .filter((p) => studentIds.has(p.id))
         .map((profile) => ({

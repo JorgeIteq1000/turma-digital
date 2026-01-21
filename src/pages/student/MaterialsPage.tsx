@@ -5,13 +5,16 @@ import { Download, FileText, Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useStudentLessons } from "@/hooks/use-lessons";
 import { useState } from "react";
+import { useIsDemo } from "@/hooks/use-user-role"; // <--- Importado
+import { useToast } from "@/hooks/use-toast"; // <--- Importado
 
 export default function MaterialsPage() {
   const navigate = useNavigate();
   const { data: lessons, isLoading } = useStudentLessons();
+  const { data: isDemo } = useIsDemo(); // <--- Check Demo
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
 
-  // Função helper segura para links
   const getSafeUrl = (url: string | null) => {
     if (!url) return "#";
     if (!url.startsWith("http://") && !url.startsWith("https://"))
@@ -19,12 +22,22 @@ export default function MaterialsPage() {
     return url;
   };
 
-  // Filtra apenas aulas que TEM material (url não nula e não vazia)
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    if (isDemo) {
+      e.preventDefault();
+      console.log("🚫 Download bloqueado na página de materiais");
+      toast({
+        variant: "destructive",
+        title: "Acesso Restrito",
+        description: "Download somente para Alunos Matriculados.",
+      });
+    }
+  };
+
   const materials =
     lessons?.filter((l) => l.material_url && l.material_url.trim() !== "") ||
     [];
 
-  // Filtro de busca
   const filtered = materials.filter(
     (l) =>
       l.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -87,14 +100,25 @@ export default function MaterialsPage() {
                       </p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <a
-                      href={getSafeUrl(lesson.material_url)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <Download className="mr-2 h-4 w-4" /> Baixar
-                    </a>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild={!isDemo}
+                    onClick={isDemo ? handleDownloadClick : undefined}
+                  >
+                    {isDemo ? (
+                      <span className="cursor-pointer flex items-center">
+                        <Download className="mr-2 h-4 w-4" /> Baixar
+                      </span>
+                    ) : (
+                      <a
+                        href={getSafeUrl(lesson.material_url)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <Download className="mr-2 h-4 w-4" /> Baixar
+                      </a>
+                    )}
                   </Button>
                 </div>
               ))
