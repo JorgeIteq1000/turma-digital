@@ -1,12 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import type {
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+} from "@/integrations/supabase/types";
 
 export type Lesson = Tables<"lessons"> & {
-  class_groups?: (Tables<"class_groups"> & {
-    courses?: Tables<"courses"> | null;
-  }) | null;
+  class_groups?:
+    | (Tables<"class_groups"> & {
+        courses?: Tables<"courses"> | null;
+      })
+    | null;
 };
 export type LessonInsert = TablesInsert<"lessons">;
 export type LessonUpdate = TablesUpdate<"lessons">;
@@ -17,13 +23,15 @@ export function useLessons() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lessons")
-        .select(`
+        .select(
+          `
           *,
           class_groups (
             *,
             courses (*)
           )
-        `)
+        `,
+        )
         .order("scheduled_at", { ascending: false });
 
       if (error) throw error;
@@ -39,13 +47,15 @@ export function useLesson(id: string | undefined) {
       if (!id) return null;
       const { data, error } = await supabase
         .from("lessons")
-        .select(`
+        .select(
+          `
           *,
           class_groups (
             *,
             courses (*)
           )
-        `)
+        `,
+        )
         .eq("id", id)
         .single();
 
@@ -119,6 +129,44 @@ export function useDeleteLesson() {
     },
     onError: (error) => {
       toast.error("Erro ao excluir aula: " + error.message);
+    },
+  });
+}
+
+export function useStudentLessons() {
+  return useQuery({
+    queryKey: ["student-lessons"],
+    queryFn: async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not found");
+
+      // 1. Pega os IDs das turmas matriculadas
+      const { data: enrollments } = await supabase
+        .from("class_enrollments")
+        .select("class_group_id")
+        .eq("user_id", user.id)
+        .eq("is_active", true);
+
+      const classIds = enrollments?.map((e) => e.class_group_id) || [];
+
+      if (classIds.length === 0) return [];
+
+      // 2. Busca TODAS as aulas dessas turmas
+      const { data: lessons, error } = await supabase
+        .from("lessons")
+        .select(
+          `
+          *,
+          class_groups ( name )
+        `,
+        )
+        .in("class_group_id", classIds)
+        .order("scheduled_at", { ascending: true });
+
+      if (error) throw error;
+      return lessons;
     },
   });
 }

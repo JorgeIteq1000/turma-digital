@@ -3,19 +3,27 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { RequireAuth } from "@/components/auth/RequireAuth"; // <--- Importe o Guard
+import { RequireAuth } from "@/components/auth/RequireAuth";
 
-// Pages
+// Páginas Públicas
 import Login from "./pages/auth/Login";
-import Index from "./pages/Index"; // Landing Page
-import Dashboard from "./pages/student/Dashboard";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+
+// Páginas do Aluno
+import StudentDashboard from "./pages/student/Dashboard"; // Renomeei para StudentDashboard para ficar claro
 import LessonView from "./pages/student/LessonView";
+import UpcomingLessonsPage from "./pages/student/UpcomingLessonsPage"; // <--- Novo
+import RecordedLessonsPage from "./pages/student/RecordedLessonsPage"; // <--- Novo
+import MaterialsPage from "./pages/student/MaterialsPage"; // <--- Novo
+import ProfilePage from "./pages/student/ProfilePage"; // <--- Novo
+
+// Páginas do Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StudentsPage from "./pages/admin/StudentsPage";
 import CoursesPage from "./pages/admin/CoursesPage";
 import ClassGroupsPage from "./pages/admin/ClassGroupsPage";
 import LessonsPage from "./pages/admin/LessonsPage";
-import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -26,71 +34,39 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Rotas Públicas */}
+          {/* --- ROTAS PÚBLICAS --- */}
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
 
-          {/* Rotas de Aluno (Protegidas) */}
-          <Route
-            path="/dashboard"
-            element={
-              <RequireAuth>
-                <Dashboard />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/lessons/:id"
-            element={
-              <RequireAuth>
-                <LessonView />
-              </RequireAuth>
-            }
-          />
+          {/* --- ÁREA DO ALUNO (Protegida) --- */}
+          {/* Este Route envolve todos os filhos com a proteção de Login */}
+          <Route element={<RequireAuth requiredRole="student" />}>
+            <Route path="/dashboard" element={<StudentDashboard />} />
+            <Route path="/lessons/:id" element={<LessonView />} />
 
-          {/* Rotas de Admin (Protegidas + Apenas Admin) */}
-          <Route
-            path="/admin"
-            element={
-              <RequireAuth requiredRole="admin">
-                <AdminDashboard />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/admin/students"
-            element={
-              <RequireAuth requiredRole="admin">
-                <StudentsPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/admin/courses"
-            element={
-              <RequireAuth requiredRole="admin">
-                <CoursesPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/admin/classes"
-            element={
-              <RequireAuth requiredRole="admin">
-                <ClassGroupsPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/admin/lessons"
-            element={
-              <RequireAuth requiredRole="admin">
-                <LessonsPage />
-              </RequireAuth>
-            }
-          />
+            {/* Novas Rotas Conectadas ao Sidebar 👇 */}
+            <Route path="/upcoming" element={<UpcomingLessonsPage />} />
+            <Route path="/recorded" element={<RecordedLessonsPage />} />
+            <Route path="/materials" element={<MaterialsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
 
-          {/* Fallback */}
+          {/* --- ÁREA DO ADMIN (Protegida + Role Admin) --- */}
+          <Route element={<RequireAuth requiredRole="admin" />}>
+            {/* Redireciona /admin para o dashboard automaticamente */}
+            <Route
+              path="/admin"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
+
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/students" element={<StudentsPage />} />
+            <Route path="/admin/courses" element={<CoursesPage />} />
+            <Route path="/admin/classes" element={<ClassGroupsPage />} />
+            <Route path="/admin/lessons" element={<LessonsPage />} />
+          </Route>
+
+          {/* Fallback para 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
