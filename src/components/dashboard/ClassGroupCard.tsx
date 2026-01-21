@@ -1,6 +1,5 @@
 import { BookOpen, Calendar, ChevronRight, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -11,9 +10,8 @@ interface ClassGroupCardProps {
   courseName: string;
   description?: string;
   lessonsCount: number;
-  imageUrl?: string | null; // <--- Nova Prop
+  imageUrl?: string | null;
   nextLessonDate?: Date;
-  progress?: number;
   onClick?: () => void;
   className?: string;
 }
@@ -25,7 +23,6 @@ export function ClassGroupCard({
   lessonsCount,
   imageUrl,
   nextLessonDate,
-  progress = 0,
   onClick,
   className,
 }: ClassGroupCardProps) {
@@ -83,15 +80,6 @@ export function ClassGroupCard({
                 </span>
               </div>
             )}
-          </div>
-
-          {/* Barra de Progresso (Visual por enquanto) */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Progresso</span>
-              <span className="font-medium text-foreground">{progress}%</span>
-            </div>
-            <Progress value={progress} className="h-1.5" />
           </div>
 
           <Button
