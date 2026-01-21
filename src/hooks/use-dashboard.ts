@@ -1,13 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { addDays } from "date-fns";
 
 // --- Hook para o Admin ---
 export function useAdminStats() {
   return useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      // 1. Contagens Totais (Executadas em paralelo para ser rápido)
+      // 1. Contagens Totais
       const [students, courses, classes, lessons] = await Promise.all([
         supabase
           .from("user_roles")
@@ -27,7 +26,7 @@ export function useAdminStats() {
           .gte("scheduled_at", new Date().toISOString()),
       ]);
 
-      // 2. Próximas Aulas (Top 5)
+      // 2. Próximas Aulas
       const { data: upcomingLessons } = await supabase
         .from("lessons")
         .select(
@@ -42,7 +41,7 @@ export function useAdminStats() {
         .order("scheduled_at", { ascending: true })
         .limit(5);
 
-      // 3. Atividade Recente (Últimas 5 visualizações)
+      // 3. Atividade Recente
       const { data: recentViews } = await supabase
         .from("lesson_views")
         .select(
@@ -67,7 +66,7 @@ export function useAdminStats() {
   });
 }
 
-// --- Hook para o Aluno ---
+// --- Hook para o Aluno (ATUALIZADO) ---
 export function useStudentDashboard() {
   return useQuery({
     queryKey: ["student-dashboard"],
@@ -77,7 +76,7 @@ export function useStudentDashboard() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("User not found");
 
-      // 1. Minhas Turmas
+      // 1. Minhas Turmas (COM CONTAGEM DE AULAS)
       const { data: enrollments } = await supabase
         .from("class_enrollments")
         .select(
@@ -86,22 +85,30 @@ export function useStudentDashboard() {
             id,
             name,
             description,
-            courses ( name )
+            courses ( name ),
+            lessons ( count ) 
           )
         `,
         )
         .eq("user_id", user.id)
         .eq("is_active", true);
 
-      const classIds = enrollments?.map((e) => e.class_groups?.id) || [];
-      const myClasses = enrollments?.map((e) => e.class_groups) || [];
+      // Nota: O Supabase retorna lessons: [{ count: 5 }]
+      const myClasses =
+        enrollments?.map((e) => ({
+          ...e.class_groups,
+          // Tratamento para pegar o número exato
+          lessonsCount: e.class_groups?.lessons?.[0]?.count || 0,
+        })) || [];
 
-      // 2. Próximas Aulas (Das turmas que participo)
+      const classIds = enrollments?.map((e) => e.class_groups?.id) || [];
+
+      // 2. Próximas Aulas
       let upcomingLessons: any[] = [];
       if (classIds.length > 0) {
         const { data } = await supabase
           .from("lessons")
-          .select("*")
+          .select("*, material_url, material_name") // Trazendo material
           .in("class_group_id", classIds)
           .gte("scheduled_at", new Date().toISOString())
           .order("scheduled_at", { ascending: true })
@@ -109,12 +116,12 @@ export function useStudentDashboard() {
         upcomingLessons = data || [];
       }
 
-      // 3. Aulas Recentes (Que já passaram)
+      // 3. Aulas Recentes
       let recentLessons: any[] = [];
       if (classIds.length > 0) {
         const { data } = await supabase
           .from("lessons")
-          .select("*")
+          .select("*, material_url, material_name") // Trazendo material
           .in("class_group_id", classIds)
           .lt("scheduled_at", new Date().toISOString())
           .order("scheduled_at", { ascending: false })

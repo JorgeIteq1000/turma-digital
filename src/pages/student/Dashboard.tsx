@@ -76,7 +76,8 @@ export default function StudentDashboard() {
                   name={classGroup.name}
                   courseName={classGroup.courses?.name || "Geral"}
                   description={classGroup.description}
-                  lessonsCount={0}
+                  // AQUI ESTÁ A CORREÇÃO MÁGICA 👇
+                  lessonsCount={classGroup.lessonsCount}
                   nextLessonDate={undefined}
                   onClick={() => {}}
                 />
