@@ -24,6 +24,7 @@ import StudentsPage from "./pages/admin/StudentsPage";
 import CoursesPage from "./pages/admin/CoursesPage";
 import ClassGroupsPage from "./pages/admin/ClassGroupsPage";
 import LessonsPage from "./pages/admin/LessonsPage";
+import ClassDetailsPage from "./pages/student/ClassDetailsPage"; // <--- Importe Novo
 
 const queryClient = new QueryClient();
 
@@ -43,7 +44,7 @@ const App = () => (
           <Route element={<RequireAuth requiredRole="student" />}>
             <Route path="/dashboard" element={<StudentDashboard />} />
             <Route path="/lessons/:id" element={<LessonView />} />
-
+            <Route path="/classes/:id" element={<ClassDetailsPage />} />
             {/* Novas Rotas Conectadas ao Sidebar 👇 */}
             <Route path="/upcoming" element={<UpcomingLessonsPage />} />
             <Route path="/recorded" element={<RecordedLessonsPage />} />

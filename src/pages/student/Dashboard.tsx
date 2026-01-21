@@ -15,7 +15,7 @@ export default function StudentDashboard() {
   };
 
   const handleWatchLesson = (lessonId: string) => {
-    navigate(`/lessons/${lessonId}`);
+    navigate(`/lessons/${lessonId}`); // Isso faz o Play funcionar
   };
 
   if (isLoading) {
@@ -77,10 +77,10 @@ export default function StudentDashboard() {
                   courseName={classGroup.courses?.name || "Geral"}
                   description={classGroup.description}
                   lessonsCount={classGroup.lessonsCount}
-                  // ADICIONE ESTA LINHA 👇
                   imageUrl={classGroup.courses?.thumbnail_url}
                   nextLessonDate={undefined}
-                  onClick={() => {}}
+                  // AQUI ESTÁ A CORREÇÃO DO BOTÃO "ACESSAR TURMA" 👇
+                  onClick={() => navigate(`/classes/${classGroup.id}`)}
                 />
               ))}
             </div>

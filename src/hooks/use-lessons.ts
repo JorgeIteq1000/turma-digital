@@ -170,3 +170,22 @@ export function useStudentLessons() {
     },
   });
 }
+
+export function useClassLessons(classId: string | undefined) {
+  return useQuery({
+    queryKey: ["class-lessons", classId],
+    queryFn: async () => {
+      if (!classId) return null;
+
+      const { data, error } = await supabase
+        .from("lessons")
+        .select("*, class_groups(name)")
+        .eq("class_group_id", classId)
+        .order("scheduled_at", { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!classId,
+  });
+}
