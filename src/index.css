@@ -1,11 +1,11 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* EduConnect - Educational Platform Design System */
 /* All colors in HSL format */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -69,18 +69,44 @@
     --sidebar-ring: 217 91% 60%;
 
     /* Custom Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217, 91%, 45%) 0%, hsl(217, 91%, 60%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(215, 25%, 12%) 0%, hsl(217, 91%, 25%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(210, 20%, 98%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(142, 76%, 36%) 0%, hsl(142, 76%, 46%) 100%);
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(217, 91%, 45%) 0%,
+      hsl(217, 91%, 60%) 100%
+    );
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(215, 25%, 12%) 0%,
+      hsl(217, 91%, 25%) 100%
+    );
+    --gradient-card: linear-gradient(
+      180deg,
+      hsl(0, 0%, 100%) 0%,
+      hsl(210, 20%, 98%) 100%
+    );
+    --gradient-success: linear-gradient(
+      135deg,
+      hsl(142, 76%, 36%) 0%,
+      hsl(142, 76%, 46%) 100%
+    );
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(215 25% 15% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(215 25% 15% / 0.08), 0 2px 4px -2px hsl(215 25% 15% / 0.05);
-    --shadow-lg: 0 10px 15px -3px hsl(215 25% 15% / 0.08), 0 4px 6px -4px hsl(215 25% 15% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(215 25% 15% / 0.1), 0 8px 10px -6px hsl(215 25% 15% / 0.08);
-    --shadow-card: 0 2px 8px -2px hsl(217 91% 45% / 0.1), 0 4px 12px -4px hsl(215 25% 15% / 0.08);
-    --shadow-card-hover: 0 8px 24px -4px hsl(217 91% 45% / 0.15), 0 12px 32px -8px hsl(215 25% 15% / 0.12);
+    --shadow-md:
+      0 4px 6px -1px hsl(215 25% 15% / 0.08),
+      0 2px 4px -2px hsl(215 25% 15% / 0.05);
+    --shadow-lg:
+      0 10px 15px -3px hsl(215 25% 15% / 0.08),
+      0 4px 6px -4px hsl(215 25% 15% / 0.05);
+    --shadow-xl:
+      0 20px 25px -5px hsl(215 25% 15% / 0.1),
+      0 8px 10px -6px hsl(215 25% 15% / 0.08);
+    --shadow-card:
+      0 2px 8px -2px hsl(217 91% 45% / 0.1),
+      0 4px 12px -4px hsl(215 25% 15% / 0.08);
+    --shadow-card-hover:
+      0 8px 24px -4px hsl(217 91% 45% / 0.15),
+      0 12px 32px -8px hsl(215 25% 15% / 0.12);
   }
 
   .dark {
@@ -133,11 +159,16 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
     @apply font-semibold tracking-tight;
   }
 }
@@ -245,18 +276,35 @@
 
   /* Animations */
   @keyframes fade-in {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes slide-in-right {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
   @keyframes pulse-soft {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
   }
 
   .animate-fade-in {
@@ -272,11 +320,21 @@
   }
 
   /* Stagger animations for lists */
-  .stagger-1 { animation-delay: 0.05s; }
-  .stagger-2 { animation-delay: 0.1s; }
-  .stagger-3 { animation-delay: 0.15s; }
-  .stagger-4 { animation-delay: 0.2s; }
-  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-1 {
+    animation-delay: 0.05s;
+  }
+  .stagger-2 {
+    animation-delay: 0.1s;
+  }
+  .stagger-3 {
+    animation-delay: 0.15s;
+  }
+  .stagger-4 {
+    animation-delay: 0.2s;
+  }
+  .stagger-5 {
+    animation-delay: 0.25s;
+  }
 
   /* Glass Effect */
   .glass {
