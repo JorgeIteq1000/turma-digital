@@ -1,4 +1,4 @@
-import { Bell, Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/icons/Logo";
 import {
@@ -7,8 +7,13 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/layout/NotificationBell"; // <--- Importamos o Sino
+
+// Precisamos do useNavigate para o link de "Meu Perfil" no dropdown
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   userName?: string;
@@ -25,6 +30,8 @@ export function Header({
   onLogout,
   onMenuClick,
 }: HeaderProps) {
+  const navigate = useNavigate();
+
   const initials = userName
     .split(" ")
     .map((n) => n[0])
@@ -35,6 +42,7 @@ export function Header({
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between px-4">
+        {/* Lado Esquerdo: Logo e Menu Mobile */}
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -47,11 +55,10 @@ export function Header({
           <Logo size="sm" />
         </div>
 
+        {/* Lado Direito: Sino e Avatar */}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
-          </Button>
+          {/* AQUI ESTÁ A TROCA 👇: Sai o botão falso, entra o NotificationBell */}
+          <NotificationBell />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -76,13 +83,22 @@ export function Header({
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium">{userName}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-sm font-medium truncate max-w-[140px]">
+                    {userName}
+                  </span>
+                  <span className="text-xs text-muted-foreground truncate max-w-[140px]">
                     {userEmail}
                   </span>
                 </div>
               </div>
               <DropdownMenuSeparator />
+
+              {/* Adicionei o link para o Perfil que criamos antes */}
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>Meu Perfil</span>
+              </DropdownMenuItem>
+
               <DropdownMenuItem
                 onClick={onLogout}
                 className="text-destructive focus:text-destructive"
