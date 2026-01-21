@@ -25,6 +25,7 @@ import CoursesPage from "./pages/admin/CoursesPage";
 import ClassGroupsPage from "./pages/admin/ClassGroupsPage";
 import LessonsPage from "./pages/admin/LessonsPage";
 import ClassDetailsPage from "./pages/student/ClassDetailsPage"; // <--- Importe Novo
+import ReportsPage from "./pages/admin/ReportsPage"; // Importe no topo
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/admin/courses" element={<CoursesPage />} />
             <Route path="/admin/classes" element={<ClassGroupsPage />} />
             <Route path="/admin/lessons" element={<LessonsPage />} />
+            <Route path="/admin/reports" element={<ReportsPage />} />
           </Route>
 
           {/* Fallback para 404 */}

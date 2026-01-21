@@ -150,3 +150,61 @@ export function useStudentDashboard() {
     },
   });
 }
+
+// --- CORRIGIDO: Hook para Relatórios de Acesso ---
+export function useActivityLogs() {
+  return useQuery({
+    queryKey: ["activity-logs"],
+    queryFn: async () => {
+      // TRUQUE DO SUPABASE:
+      // Como 'user_id' é FK para auth.users e não profiles,
+      // precisamos ser explícitos ou garantir que exista FK para profiles.
+      // SE a FK para profiles não existir, o jeito mais seguro é buscar views
+      // e DEPOIS buscar os profiles manualmente (Two-Step Fetch).
+      // Mas para manter a performance, vamos tentar a query corrigida primeiro.
+
+      const { data, error } = await supabase
+        .from("lesson_views")
+        .select(
+          `
+          id,
+          viewed_at,
+          user_id, 
+          lessons ( 
+            title, 
+            class_groups ( name ) 
+          )
+        `,
+        )
+        .order("viewed_at", { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error("Erro ao buscar logs básicos:", error);
+        throw error;
+      }
+
+      // Passo 2: Buscar os perfis manualmente (Garante 100% de sucesso sem mexer no banco)
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map((log) => log.user_id))];
+
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, email, avatar_url")
+          .in("id", userIds);
+
+        // Mistura os dados (Join manual no JavaScript)
+        return data.map((log) => ({
+          ...log,
+          profiles: profiles?.find((p) => p.id === log.user_id) || {
+            full_name: "Desconhecido",
+            email: "-",
+          },
+        }));
+      }
+
+      return [];
+    },
+    refetchInterval: 5000,
+  });
+}

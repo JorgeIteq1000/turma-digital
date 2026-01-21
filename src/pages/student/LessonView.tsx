@@ -28,24 +28,38 @@ export default function LessonView() {
 
   useEffect(() => {
     const recordView = async () => {
-      if (hasStartedWatching && lesson?.id && id) {
+      // Só registra se tivermos ID da aula e ID do usuário
+      if (hasStartedWatching && lesson?.id) {
         const {
           data: { user },
         } = await supabase.auth.getUser();
+
         if (user) {
-          await supabase.from("lesson_views").upsert(
+          console.log("📡 Enviando ping de visualização...", lesson.title);
+
+          const { error } = await supabase.from("lesson_views").upsert(
             {
               user_id: user.id,
               lesson_id: lesson.id,
-              viewed_at: new Date().toISOString(),
+              viewed_at: new Date().toISOString(), // Atualiza o horário para AGORA
             },
-            { onConflict: "user_id, lesson_id" },
+            {
+              onConflict: "user_id, lesson_id", // Usa o índice que criamos no SQL
+            },
           );
+
+          if (error) console.error("❌ Erro ao registrar view:", error);
+          else console.log("✅ Visualização registrada com sucesso!");
         }
       }
     };
+
     recordView();
-  }, [hasStartedWatching, lesson?.id, id]);
+
+    // Opcional: Atualizar a cada 30 segundos enquanto assiste para manter o status "online"
+    const interval = setInterval(recordView, 30000);
+    return () => clearInterval(interval);
+  }, [hasStartedWatching, lesson?.id]); // Removemos 'id' do array para evitar loop, usamos lesson.id
 
   // --- 🛠️ FUNÇÃO DE CORREÇÃO DE URL ---
   const getSafeUrl = (url: string | null) => {
