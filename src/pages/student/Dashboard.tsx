@@ -1,10 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Calendar, Play, Loader2 } from "lucide-react";
+import { BookOpen, Calendar, Loader2 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { ClassGroupCard } from "@/components/dashboard/ClassGroupCard";
 import { LessonCard } from "@/components/lessons/LessonCard";
-import { Button } from "@/components/ui/button";
 import { useStudentDashboard } from "@/hooks/use-dashboard";
 
 export default function StudentDashboard() {
@@ -28,11 +27,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <DashboardLayout
-      userName="Aluno" // O Layout já busca o nome real internamente ou podemos passar via props se quiser
-      userEmail=""
-      onLogout={handleLogout}
-    >
+    <DashboardLayout userName="Aluno" userEmail="" onLogout={handleLogout}>
       <div className="space-y-8">
         {/* Welcome Section */}
         <section>
@@ -81,9 +76,9 @@ export default function StudentDashboard() {
                   name={classGroup.name}
                   courseName={classGroup.courses?.name || "Geral"}
                   description={classGroup.description}
-                  lessonsCount={0} // Podemos ajustar isso depois com count real
+                  lessonsCount={0}
                   nextLessonDate={undefined}
-                  onClick={() => {}} // Futuramente navegar para detalhes da turma
+                  onClick={() => {}}
                 />
               ))}
             </div>
@@ -106,8 +101,9 @@ export default function StudentDashboard() {
                   title={lesson.title}
                   description={lesson.description}
                   scheduledAt={new Date(lesson.scheduled_at)}
-                  isAvailable={false} // Lógica futura: check se já passou da hora
+                  isAvailable={false}
                   hasMaterial={!!lesson.material_url}
+                  materialUrl={lesson.material_url} // <--- ADICIONADO AQUI
                   onWatch={() => handleWatchLesson(lesson.id)}
                 />
               ))}
@@ -133,6 +129,7 @@ export default function StudentDashboard() {
                   scheduledAt={new Date(lesson.scheduled_at)}
                   isAvailable={true}
                   hasMaterial={!!lesson.material_url}
+                  materialUrl={lesson.material_url} // <--- ADICIONADO AQUI TAMBÉM
                   onWatch={() => handleWatchLesson(lesson.id)}
                 />
               ))}
