@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
+  Pencil,
   Calendar,
   Trash2,
   Link as LinkIcon,
@@ -31,6 +32,7 @@ import {
   useSchedules,
   useCreateSchedule,
   useDeleteSchedule,
+  useUpdateSchedule,
 } from "@/hooks/use-schedules";
 
 export default function SchedulesPage() {
@@ -40,27 +42,61 @@ export default function SchedulesPage() {
 
   const { mutate: createSchedule, isPending: creating } = useCreateSchedule();
   const { mutate: deleteSchedule, isPending: deleting } = useDeleteSchedule();
+  const { mutate: updateSchedule, isPending: updating } = useUpdateSchedule();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newSchedule, setNewSchedule] = useState({
     title: "",
     file_url: "",
     class_group_id: "",
   });
 
-  const handleCreate = () => {
+  const handleSave = () => {
     if (
       !newSchedule.title ||
       !newSchedule.file_url ||
       !newSchedule.class_group_id
     )
       return;
-    createSchedule(newSchedule, {
-      onSuccess: () => {
-        setIsOpen(false);
-        setNewSchedule({ title: "", file_url: "", class_group_id: "" });
-      },
+
+    if (editingId) {
+      updateSchedule(
+        { id: editingId, ...newSchedule },
+        {
+          onSuccess: () => {
+            setIsOpen(false);
+            setNewSchedule({ title: "", file_url: "", class_group_id: "" });
+            setEditingId(null);
+          },
+        }
+      );
+    } else {
+      createSchedule(newSchedule, {
+        onSuccess: () => {
+          setIsOpen(false);
+          setNewSchedule({ title: "", file_url: "", class_group_id: "" });
+        },
+      });
+    }
+  };
+
+  const handleEdit = (item: any) => {
+    setNewSchedule({
+      title: item.title,
+      file_url: item.file_url,
+      class_group_id: item.class_group_id,
     });
+    setEditingId(item.id);
+    setIsOpen(true);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      setNewSchedule({ title: "", file_url: "", class_group_id: "" });
+      setEditingId(null);
+    }
   };
 
   return (
@@ -79,7 +115,7 @@ export default function SchedulesPage() {
             </p>
           </div>
 
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <Dialog open={isOpen} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" /> Novo Cronograma
@@ -87,7 +123,9 @@ export default function SchedulesPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Adicionar Cronograma</DialogTitle>
+                <DialogTitle>
+                  {editingId ? "Editar Cronograma" : "Adicionar Cronograma"}
+                </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -135,13 +173,13 @@ export default function SchedulesPage() {
                 </div>
                 <Button
                   className="w-full"
-                  onClick={handleCreate}
-                  disabled={creating}
+                  onClick={handleSave}
+                  disabled={creating || updating}
                 >
-                  {creating && (
+                  {(creating || updating) && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}{" "}
-                  Salvar
+                  {editingId ? "Salvar Alterações" : "Salvar"}
                 </Button>
               </div>
             </DialogContent>
@@ -171,6 +209,14 @@ export default function SchedulesPage() {
                       disabled={deleting}
                     >
                       <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:bg-muted"
+                      onClick={() => handleEdit(item)}
+                    >
+                      <Pencil className="h-4 w-4" />
                     </Button>
                   </CardTitle>
                 </CardHeader>

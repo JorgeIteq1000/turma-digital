@@ -74,6 +74,42 @@ export function useCreateSchedule() {
   });
 }
 
+export function useUpdateSchedule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      title,
+      file_url,
+      class_group_id,
+    }: {
+      id: string;
+      title: string;
+      file_url: string;
+      class_group_id: string;
+    }) => {
+      const { error } = await supabase
+        .from("class_schedules")
+        .update({
+          title,
+          file_url,
+          class_group_id,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      toast.success("Cronograma atualizado com sucesso!");
+    },
+    onError: (error) => {
+      toast.error("Erro ao atualizar: " + error.message);
+    },
+  });
+}
+
 export function useDeleteSchedule() {
   const queryClient = useQueryClient();
 
