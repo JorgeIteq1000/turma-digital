@@ -26,6 +26,8 @@ import ClassGroupsPage from "./pages/admin/ClassGroupsPage";
 import LessonsPage from "./pages/admin/LessonsPage";
 import ClassDetailsPage from "./pages/student/ClassDetailsPage"; // <--- Importe Novo
 import ReportsPage from "./pages/admin/ReportsPage"; // Importe no topo
+import SchedulesPage from "./pages/admin/SchedulesPage";
+import StudentSchedulesPage from "./pages/student/StudentSchedulesPage";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +52,7 @@ const App = () => (
             <Route path="/upcoming" element={<UpcomingLessonsPage />} />
             <Route path="/recorded" element={<RecordedLessonsPage />} />
             <Route path="/materials" element={<MaterialsPage />} />
+            <Route path="/schedules" element={<StudentSchedulesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
@@ -67,6 +70,7 @@ const App = () => (
             <Route path="/admin/classes" element={<ClassGroupsPage />} />
             <Route path="/admin/lessons" element={<LessonsPage />} />
             <Route path="/admin/reports" element={<ReportsPage />} />
+            <Route path="/admin/schedules" element={<SchedulesPage />} />
           </Route>
 
           {/* Fallback para 404 */}

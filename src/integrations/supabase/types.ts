@@ -14,6 +14,40 @@ export type Database = {
   };
   public: {
     Tables: {
+      // --- NOVA TABELA ADICIONADA AQUI ---
+      class_schedules: {
+        Row: {
+          id: string;
+          class_group_id: string;
+          title: string;
+          file_url: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          class_group_id: string;
+          title: string;
+          file_url: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          class_group_id?: string;
+          title?: string;
+          file_url?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "class_schedules_class_group_id_fkey";
+            columns: ["class_group_id"];
+            isOneToOne: false;
+            referencedRelation: "class_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // -----------------------------------
       class_enrollments: {
         Row: {
           class_group_id: string;
@@ -213,8 +247,8 @@ export type Database = {
           full_name: string;
           id: string;
           updated_at: string;
-          is_demo: boolean | null; // <--- Adicionado
-          demo_hours: number | null; // <--- Adicionado
+          is_demo: boolean | null;
+          demo_hours: number | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -223,8 +257,8 @@ export type Database = {
           full_name: string;
           id: string;
           updated_at?: string;
-          is_demo?: boolean | null; // <--- Adicionado
-          demo_hours?: number | null; // <--- Adicionado
+          is_demo?: boolean | null;
+          demo_hours?: number | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -233,8 +267,8 @@ export type Database = {
           full_name?: string;
           id?: string;
           updated_at?: string;
-          is_demo?: boolean | null; // <--- Adicionado
-          demo_hours?: number | null; // <--- Adicionado
+          is_demo?: boolean | null;
+          demo_hours?: number | null;
         };
         Relationships: [];
       };

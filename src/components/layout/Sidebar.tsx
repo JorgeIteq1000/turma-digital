@@ -13,6 +13,7 @@ import {
   X,
   LogOut,
   Loader2,
+  CalendarRange,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/icons/Logo";
@@ -40,6 +41,7 @@ const studentNavItems: NavItem[] = [
   { icon: Calendar, label: "Próximas Aulas", href: "/upcoming" },
   { icon: BookOpen, label: "Aulas Gravadas", href: "/recorded" },
   { icon: FolderOpen, label: "Materiais", href: "/materials" },
+  { icon: CalendarRange, label: "Cronogramas", href: "/schedules" },
   { icon: User, label: "Meu Perfil", href: "/profile" },
 ];
 
@@ -50,6 +52,7 @@ const adminNavItems: NavItem[] = [
   { icon: Calendar, label: "Aulas", href: "/admin/lessons" },
   { icon: Users, label: "Alunos", href: "/admin/students" },
   { icon: BarChart3, label: "Relatórios", href: "/admin/reports" },
+  { icon: CalendarRange, label: "Cronogramas", href: "/admin/schedules" },
   { icon: Settings, label: "Configurações", href: "/admin/settings" },
 ];
 
