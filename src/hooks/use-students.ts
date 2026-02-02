@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -179,8 +180,21 @@ export function useCreateStudent() {
       full_name: string;
       metadata?: { is_demo: boolean; demo_hours?: number };
     }) => {
+      // Cliente temporário para não sobrescrever a sessão do Admin
+      const tempSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
+          },
+        },
+      );
+
       // 1. Criação do Usuário
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await tempSupabase.auth.signUp({
         email,
         password,
         options: {
