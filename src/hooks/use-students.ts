@@ -307,3 +307,24 @@ export function useUpdateStudentEnrollments() {
     },
   });
 }
+
+export function useDeleteStudent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      // Deleta o perfil da tabela public.profiles
+      // Devido ao FK cascade, isso deve remover matrículas e roles associadas
+      const { error } = await supabase.from("profiles").delete().eq("id", userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast.success("Aluno excluído com sucesso!");
+    },
+    onError: (error) => {
+      toast.error("Erro ao excluir aluno: " + error.message);
+    },
+  });
+}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Users, Search, BookOpen, Clock } from "lucide-react"; // <--- Importei Clock
+import { Plus, Pencil, Users, Search, BookOpen, Clock, Trash2 } from "lucide-react"; // <--- Importei Trash2
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useStudents } from "@/hooks/use-students";
+import { useStudents, useDeleteStudent } from "@/hooks/use-students";
 import { StudentEnrollmentDialog } from "@/components/admin/StudentEnrollmentDialog";
 import { StudentFormDialog } from "@/components/admin/StudentFormDialog";
 import { format } from "date-fns";
@@ -36,6 +46,10 @@ export default function StudentsPage() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
     null,
   );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  const deleteStudent = useDeleteStudent();
 
   const handleLogout = () => {
     navigate("/");
@@ -62,6 +76,22 @@ export default function StudentsPage() {
     const created = new Date(createdAt);
     const expires = new Date(created.getTime() + hours * 60 * 60 * 1000);
     return expires;
+  };
+
+  const handleDeleteClick = (student: { id: string; full_name: string }) => {
+    setStudentToDelete({ id: student.id, name: student.full_name });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (studentToDelete) {
+      deleteStudent.mutate(studentToDelete.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setStudentToDelete(null);
+        },
+      });
+    }
   };
 
   return (
@@ -203,6 +233,7 @@ export default function StudentsPage() {
                         })}
                       </TableCell>
                       <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
                         <Button
                           variant="outline"
                           size="sm"
@@ -211,6 +242,16 @@ export default function StudentsPage() {
                           <Pencil className="mr-2 h-4 w-4" />
                           Matrículas
                         </Button>
+                        <Button
+                          variant="ghost" // Mudado para ghost para não poluir visualmente, ou manter outline e por um ícone de deletar
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteClick(student)}
+                          title="Excluir Aluno"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -231,6 +272,29 @@ export default function StudentsPage() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o aluno
+              <span className="font-bold text-foreground"> {studentToDelete?.name} </span>
+              e removerá seus dados de acesso e histórico de aulas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteStudent.isPending}
+            >
+              {deleteStudent.isPending ? "Excluindo..." : "Sim, excluir aluno"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
